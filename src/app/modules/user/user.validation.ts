@@ -15,8 +15,7 @@ export const createUserZodSchema = z.object({
         .regex(/[^a-zA-Z0-9]/, { message: "Password must contain at least one special character" }),
 
     role: z.enum([Role.SENDER, Role.RECEIVER], {
-        message: "Role must be either SENDER or RECEIVER",
-        error: "Role must be either SENDER or RECEIVER"
+        message: "Role must be either SENDER or RECEIVER"
     }).default(Role.SENDER).optional(),
 
     isActive: z.enum(Object.values(IsActive))

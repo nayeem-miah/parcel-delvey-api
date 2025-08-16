@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import cors from "cors"
 import notFount from "./app/middlewares/notFound";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
+import { router } from "./app/routes";
 
 
 const app = express();
@@ -11,7 +12,7 @@ app.use(express.urlencoded({ extended: true }))  // parse JSON
 app.use(cors());
 
 // router 
-
+app.use("/api/v1", router)
 
 app.get("/", (req: Request, res: Response) => {
     res.status(200).json({
