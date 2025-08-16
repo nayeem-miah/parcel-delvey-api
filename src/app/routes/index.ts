@@ -2,6 +2,7 @@
 
 import { Router } from 'express';
 import { UserRouter } from '../modules/user/user.route';
+import { AuthRoutes } from '../modules/auth/auth.route';
 export const router = Router();
 
 interface IModule {
@@ -13,7 +14,11 @@ const modelerRouters: IModule[] = [
     {
         path: "/user",
         route: UserRouter
-    }
+    },
+    {
+        path: "/auth",
+        route: AuthRoutes
+    },
 ];
 
 
