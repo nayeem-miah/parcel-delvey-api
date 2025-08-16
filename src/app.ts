@@ -20,7 +20,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // global error
-app.use(globalErrorHandler)
+app.use(globalErrorHandler);
 // not fount page
 app.use(notFount);
 
