@@ -1,15 +1,15 @@
-
 /* eslint-disable no-console */
 import { Server } from "http";
 import mongoose from "mongoose";
 import app from "./app"
+import { envVars } from "./app/config/env";
 
 let server: Server;
 
-
+console.log(envVars.MONGODB_URI);
 const startServer = async () => {
     try {
-        await mongoose.connect("mongodb://localhost:27017/parcelDB")
+        await mongoose.connect(envVars.MONGODB_URI)
         console.log("connect db");
 
         server = app.listen(5000, () => {
