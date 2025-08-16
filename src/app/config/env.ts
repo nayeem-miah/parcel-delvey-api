@@ -5,13 +5,14 @@ dotenv.config()
 interface IEnvFile {
     PORT: string
     MONGODB_URI: string;
-    NODE_ENV: string
+    NODE_ENV: string;
+    BCRYPT_SLOT_ROUND: string;
 }
 
 const localVariable = (): IEnvFile => {
 
     const requireVariable: string[] = [
-        "PORT", "MONGODB_URI", "NODE_ENV"
+        "PORT", "MONGODB_URI", "NODE_ENV", "BCRYPT_SLOT_ROUND"
     ]
 
     requireVariable.forEach(key => {
@@ -23,7 +24,8 @@ const localVariable = (): IEnvFile => {
     return {
         PORT: process.env.PORT as string,
         MONGODB_URI: process.env.MONGODB_URI as string,
-        NODE_ENV: process.env.NODE_ENV as ("development" | "production")
+        NODE_ENV: process.env.NODE_ENV as ("development" | "production"),
+        BCRYPT_SLOT_ROUND: process.env.BCRYPT_SLOT_ROUND as string
     }
 
 };
