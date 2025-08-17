@@ -1,5 +1,6 @@
+import { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../../config/env";
-import { IUser } from "./user.interface"
+import { IUser, Role } from "./user.interface"
 import { User } from "./user.model"
 import bcrypt from "bcrypt"
 
@@ -51,10 +52,44 @@ const singleUser = async (id: string) => {
     }
 }
 
+const updateUser = async (userId: string, payload: Partial<IUser>, decodedToken: JwtPayload) => {
+
+    if (decodedToken.role === Role.RECEIVER || decodedToken.role === Role.SENDER) {
+        if (userId !== decodedToken.userId) {
+            throw new Error("you are not authorized")
+        }
+    }
+
+    // find user 
+    const isExistUser = await User.findById(userId);
+
+    if (!isExistUser) {
+        throw new Error("user not found!")
+    }
+
+    if (payload.role) {
+        if (decodedToken.role === Role.RECEIVER || decodedToken.role === Role.SENDER) {
+            throw new Error("you are not authorized")
+        }
+    }
+
+    const newUpdateUser = await User.findByIdAndUpdate(userId, payload, {
+        new: true,
+        runValidators: true
+    }).select("-password")
+
+    return newUpdateUser
+};
+
+
+
+
 export const UserService = {
     createUser,
     userProfile,
     allUser,
-    singleUser
+    singleUser,
+    updateUser,
+
 }
 

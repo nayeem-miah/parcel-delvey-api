@@ -28,6 +28,5 @@ export const createUserZodSchema = z.object({
 export const updateUserZodSchema = z.object({
     name: z.string().min(2, "Name is short minimum 2 character")
         .optional(),
-
     address: z.string().optional(),
 })

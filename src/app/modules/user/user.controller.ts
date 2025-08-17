@@ -12,7 +12,7 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: StatusCodes.CREATED,
         success: true,
-        message: "user retrieve success ✅",
+        message: "user create success success ✅",
         data: result
     })
 })
@@ -33,14 +33,13 @@ const userProfile = catchAsync(async (req: Request, res: Response) => {
 
 const allUser = catchAsync(async (req: Request, res: Response) => {
 
-
     const result = await UserService.allUser()
 
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
         message: "all user received success ✅",
-        data: result
+        data: result.user
     })
 })
 
@@ -57,7 +56,20 @@ const singleUser = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
+const updateUser = catchAsync(async (req: Request, res: Response) => {
 
+    const userId = req.params.id;
+    const payload = req.body;
+    const verifyToken = req.user
+    const result = await UserService.updateUser(userId, payload, verifyToken)
+
+    sendResponse(res, {
+        statusCode: StatusCodes.CREATED,
+        success: true,
+        message: "user update success ✅",
+        data: result
+    })
+})
 
 
 
@@ -66,5 +78,6 @@ export const UserController = {
     createUser,
     userProfile,
     allUser,
-    singleUser
+    singleUser,
+    updateUser
 }

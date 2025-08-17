@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { UserController } from "./user.controller";
 import { validateRequest } from "../../middlewares/validateRequest";
-import { createUserZodSchema } from "./user.validation";
+import { createUserZodSchema, updateUserZodSchema } from "./user.validation";
 import { checkAuth } from "../../middlewares/checkAuth";
 import { Role } from "./user.interface";
 
@@ -25,6 +25,12 @@ router.get("/all-user",
 router.get("/:id",
     checkAuth(Role.ADMIN),
     UserController.singleUser
+)
+
+router.patch("/:id",
+    validateRequest(updateUserZodSchema),
+    checkAuth(...Object.values(Role)),
+    UserController.updateUser
 )
 
 
