@@ -7,7 +7,6 @@ import { seedAdmin } from "./app/utils/seedAdmin";
 
 let server: Server;
 
-console.log(envVars.MONGODB_URI);
 const startServer = async () => {
     try {
         await mongoose.connect(envVars.MONGODB_URI)

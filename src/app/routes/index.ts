@@ -3,6 +3,7 @@
 import { Router } from 'express';
 import { UserRouter } from '../modules/user/user.route';
 import { AuthRoutes } from '../modules/auth/auth.route';
+import { ParcelRoute } from '../modules/parcel/parcel.route';
 export const router = Router();
 
 interface IModule {
@@ -18,6 +19,10 @@ const modelerRouters: IModule[] = [
     {
         path: "/auth",
         route: AuthRoutes
+    },
+    {
+        path: "/parcels",
+        route: ParcelRoute
     },
 ];
 
