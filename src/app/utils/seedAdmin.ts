@@ -8,8 +8,10 @@ export const seedAdmin = async () => {
         const isExistUser = await User.findOne({ email: envVars.ADMIN_EMAIL });
 
         if (isExistUser) {
-            throw new Error("user already exists")
+            console.log("⚠️ Admin user already exists, skipping...");
+            return;
         }
+
         // hash password
         const hasPassword = await bcrypt.hash(envVars.ADMIN_PASS, Number(envVars.BCRYPT_SLOT_ROUND))
 

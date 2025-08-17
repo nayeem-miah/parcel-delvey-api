@@ -5,7 +5,7 @@ dotenv.config()
 interface IEnvFile {
     PORT: string
     MONGODB_URI: string;
-    NODE_ENV: string;
+    NODE_ENV: "development" | "production";
     BCRYPT_SLOT_ROUND: string;
     ADMIN_EMAIL: string
     ADMIN_PASS: string;
