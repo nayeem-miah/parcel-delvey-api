@@ -16,6 +16,15 @@ router.post("/register",
 router.get("/me",
     checkAuth(...Object.values(Role)),
     UserController.userProfile
+);
+
+router.get("/all-user",
+    checkAuth(Role.ADMIN),
+    UserController.allUser
+)
+router.get("/:id",
+    checkAuth(Role.ADMIN),
+    UserController.singleUser
 )
 
 

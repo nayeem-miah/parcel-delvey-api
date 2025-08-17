@@ -29,15 +29,32 @@ const createUser = async (payload: Partial<IUser>) => {
     }
 };
 
-
 const userProfile = async (userId: string) => {
     const user = await User.findById(userId).select("-password")
 
     return user
 }
 
+const allUser = async () => {
+    const user = await User.find();
+
+    return {
+        user
+    }
+}
+
+const singleUser = async (id: string) => {
+    const users = await User.findOne({ _id: id }).select("-password");
+
+    return {
+        users
+    }
+}
+
 export const UserService = {
     createUser,
-    userProfile
+    userProfile,
+    allUser,
+    singleUser
 }
 
