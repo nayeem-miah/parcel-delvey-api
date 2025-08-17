@@ -22,7 +22,8 @@ const credentialLogin = async (payload: Partial<IUser>) => {
         throw new Error("Invalid password ❌")
     }
     //  create jwt token
-    const generateToken = createUserToken(payload)
+    const generateToken = createUserToken(isExistsUser)
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: pass, ...rest } = isExistsUser.toObject()
     return {

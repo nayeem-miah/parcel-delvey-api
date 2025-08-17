@@ -11,7 +11,21 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
 
     sendResponse(res, {
         statusCode: StatusCodes.CREATED,
-        success: false,
+        success: true,
+        message: "user retrieve success ✅",
+        data: result
+    })
+})
+
+const userProfile = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user;
+
+
+    const result = await UserService.userProfile(decodedToken.userId)
+
+    sendResponse(res, {
+        statusCode: StatusCodes.CREATED,
+        success: true,
         message: "user created success ✅",
         data: result
     })
@@ -23,5 +37,6 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
 
 
 export const UserController = {
-    createUser
+    createUser,
+    userProfile
 }

@@ -2,6 +2,9 @@ import { envVars } from "../../config/env";
 import { IUser } from "./user.interface"
 import { User } from "./user.model"
 import bcrypt from "bcrypt"
+
+
+
 const createUser = async (payload: Partial<IUser>) => {
     const { email, password, ...rest } = payload;
 
@@ -26,7 +29,15 @@ const createUser = async (payload: Partial<IUser>) => {
     }
 };
 
+
+const userProfile = async (userId: string) => {
+    const user = await User.findById(userId).select("-password")
+
+    return user
+}
+
 export const UserService = {
     createUser,
+    userProfile
 }
 

@@ -11,6 +11,8 @@ export const createUserToken = (user: Partial<IUser>) => {
         email: user.email,
         role: user.role
     }
+
+
     const generateToken = jwt.sign(jwtPayload, envVars.JWT_SECRET, {
         expiresIn: envVars.JWT_EXPIRE
     } as SignOptions);
