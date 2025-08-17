@@ -2,7 +2,6 @@ import { model, Schema } from "mongoose";
 import { IParcel, IStatusLog, ParcelStatus } from "./parcel.interface";
 import { Role } from "../user/user.interface";
 
-
 // StatusLog SubSchema
 const StatusLogSchema = new Schema<IStatusLog>(
     {
@@ -10,13 +9,14 @@ const StatusLogSchema = new Schema<IStatusLog>(
             type: String,
             enum: Object.values(ParcelStatus),
             default: ParcelStatus.REQUESTED,
-            required: true,
+            required: true
         },
         timestamp: { type: Date, default: Date.now },
         updatedBy: {
             type: String,
             enum: Object.values(Role),
-            required: true,
+            default: Role.SENDER,
+
         },
         note: { type: String },
     },
@@ -32,7 +32,6 @@ const ParcelSchema = new Schema<IParcel>(
     {
         tracking_id: {
             type: String,
-            required: true,
             unique: true
         },
         type: { type: String, required: true },
@@ -72,5 +71,6 @@ const ParcelSchema = new Schema<IParcel>(
     },
     { timestamps: true }
 );
+
 
 export const Parcel = model<IParcel>("Parcel", ParcelSchema);

@@ -1,19 +1,18 @@
 // src/modules/parcel/parcel.validation.ts
 import { z } from "zod";
-import { Role } from "../user/user.interface";
 import { ParcelStatus } from "./parcel.interface";
 
 // status log schema
 const StatusLogValidation = z.object({
-    status: z.enum(ParcelStatus).default(ParcelStatus.REQUESTED),
+    status: z.enum(ParcelStatus).default(ParcelStatus.REQUESTED).optional(),
     timestamp: z.date().optional(),
-    updatedBy: z.nativeEnum(Role),
+    updatedBy: z.enum(ParcelStatus).default(ParcelStatus.REQUESTED).optional(),
     note: z.string().optional(),
 });
 
 //  ParcelValidation zod schema
 const ParcelValidation = z.object({
-    tracking_id: z.string().min(1, "Tracking ID is required"),
+
     type: z.string().min(1, "Parcel type is required"),
     weight: z.number().positive("Weight must be positive"),
     fee: z.number().nonnegative("Fee must be non-negative"),
