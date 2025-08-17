@@ -10,7 +10,7 @@ const credentialLogin = catchAsync(async (req: Request, res: Response) => {
     const userInfo = await AuthService.credentialLogin(req.body);
     // console.log(result.accessToken);
 
-    //  set jwt token ---cookie
+    //  set jwt token --- in cookie
     AuthCookie(res, userInfo)
 
     sendResponse(res, {
@@ -20,8 +20,26 @@ const credentialLogin = catchAsync(async (req: Request, res: Response) => {
         data: userInfo
     })
 });
+const logout = catchAsync(async (req: Request, res: Response) => {
+
+    // clear cookie jwt token
+    res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax"
+    })
+
+
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "user login success ✅",
+        data: null
+    })
+});
 
 
 export const AuthController = {
     credentialLogin,
+    logout
 }
