@@ -104,7 +104,7 @@ const updateIsBlocked = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
-        message: "isBlocked update success success ✅",
+        message: `this parcel is ${result.updateData.isBlocked ? 'Blocked' : "unBlocked"} success✅`,
         data: result.updateData,
         // meta: result.meta
     })

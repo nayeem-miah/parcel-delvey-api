@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { JwtPayload } from "jsonwebtoken";
 import { IParcel, IStatusLog, ParcelStatus, } from "./parcel.interface";
@@ -149,13 +150,26 @@ const updateIsBlocked = async (id: string, decodeToken: JwtPayload) => {
 
     if (isExistUser.role !== Role.ADMIN) {
         throw new Error("You can not access this route")
+    };
+
+    const parcel = await Parcel.findById(id);
+    let updateData: any;
+
+    if (parcel?.isBlocked) {
+        updateData = await Parcel.findByIdAndUpdate(
+            id,
+            { isBlocked: false },
+            { new: true, runValidators: true }
+        )
+    } else {
+        updateData = await Parcel.findByIdAndUpdate(
+            id,
+            { isBlocked: true },
+            { new: true, runValidators: true }
+        )
     }
 
-    const updateData = await Parcel.findByIdAndUpdate(
-        id,
-        { isBlocked: true },
-        { new: true, runValidators: true }
-    )
+
 
     return {
         updateData
