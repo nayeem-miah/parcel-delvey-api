@@ -4,13 +4,12 @@ import { IParcel, IStatusLog, ParcelStatus, } from "./parcel.interface";
 import { Parcel } from "./parcel.model";
 import { Role } from "../user/user.interface";
 import { TMeta } from "../../utils/sendResponse";
+import { User } from "../user/user.model";
 
 
 const createParcel = async (payload: Partial<IParcel>) => {
 
-
     const parcel = await Parcel.create(payload);
-
     return {
         parcel
     }
@@ -61,7 +60,7 @@ const cancelParcel = async (tracking_id: string, decodeToken: JwtPayload) => {
 const allParcel = async (query: Record<string, string>, decodeToken: JwtPayload) => {
 
     if (decodeToken.role !== Role.SENDER) {
-        throw new Error("parcel role is not sender")
+        throw new Error("You can not access this route")
     }
 
     //  pagination implement
@@ -104,7 +103,64 @@ const allParcel = async (query: Record<string, string>, decodeToken: JwtPayload)
     }
 }
 
+const getAllParcelByAdmin = async (query: Record<string, string>, decodeToken: JwtPayload) => {
 
+    if (decodeToken.role !== Role.ADMIN) {
+        throw new Error("You can not access this route")
+    }
+
+    //  pagination
+    const page = Number(query.page) || 1
+    const limit = Number(query.limit) || 10
+    const skip = (page - 1) * limit
+
+
+
+    const totalCountParcel = await Parcel.countDocuments()
+    const totalPage = Math.ceil(totalCountParcel / limit)
+    // sender parcel find 
+    const senderParcel = await Parcel.find()
+        .populate('sender', 'name email address')
+        .populate('receiver', 'name email address')
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip)
+
+    const meta: TMeta = {
+        page: page,
+        limit: limit,
+        total: totalCountParcel,
+        totalPage: totalPage
+    }
+
+    return {
+        data: senderParcel,
+        meta: meta
+    }
+}
+
+const updateIsBlocked = async (id: string, decodeToken: JwtPayload) => {
+
+    const isExistUser = await User.findOne({ email: decodeToken.email });
+
+    if (!isExistUser) {
+        throw new Error("user not found !")
+    }
+
+    if (isExistUser.role !== Role.ADMIN) {
+        throw new Error("You can not access this route")
+    }
+
+    const updateData = await Parcel.findByIdAndUpdate(
+        id,
+        { isBlocked: true },
+        { new: true, runValidators: true }
+    )
+
+    return {
+        updateData
+    }
+}
 
 
 
@@ -112,5 +168,7 @@ const allParcel = async (query: Record<string, string>, decodeToken: JwtPayload)
 export const ParcelService = {
     createParcel,
     cancelParcel,
-    allParcel
+    allParcel,
+    getAllParcelByAdmin,
+    updateIsBlocked
 }

@@ -80,7 +80,35 @@ const allParcel = catchAsync(async (req: Request, res: Response) => {
 })
 
 
+const getAllParcelByAdmin = catchAsync(async (req: Request, res: Response) => {
+    const query = req.query;
+    const decodeToken = req.user
 
+    const result = await ParcelService.getAllParcelByAdmin(query as Record<string, string>, decodeToken);
+
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Äll Parcel retrieved success ✅",
+        data: result.data,
+        meta: result.meta
+    })
+})
+
+const updateIsBlocked = catchAsync(async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const decodeToken = req.user
+
+    const result = await ParcelService.updateIsBlocked(id, decodeToken);
+
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "isBlocked update success success ✅",
+        data: result.updateData,
+        // meta: result.meta
+    })
+})
 
 
 
@@ -95,5 +123,7 @@ const allParcel = catchAsync(async (req: Request, res: Response) => {
 export const ParcelController = {
     createParcel,
     cancelParcel,
-    allParcel
+    allParcel,
+    getAllParcelByAdmin,
+    updateIsBlocked
 }

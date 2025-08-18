@@ -23,6 +23,16 @@ router.get("/me",
     ParcelController.allParcel
 );
 
+router.get("/all",
+    checkAuth(Role.ADMIN),
+    ParcelController.getAllParcelByAdmin
+)
+
+router.patch("/blocked/:id",
+    checkAuth(Role.ADMIN),
+    ParcelController.updateIsBlocked
+)
+
 
 
 
