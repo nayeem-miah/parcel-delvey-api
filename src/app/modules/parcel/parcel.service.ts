@@ -6,8 +6,9 @@ import { Parcel } from "./parcel.model";
 import { Role } from "../user/user.interface";
 import { TMeta } from "../../utils/sendResponse";
 import { User } from "../user/user.model";
+import { updateStatusLogsApproved, updateStatusLogsDispatched } from "../../utils/statusLog";
 
-
+//  sender services
 const createParcel = async (payload: Partial<IParcel>) => {
 
     const parcel = await Parcel.create(payload);
@@ -104,6 +105,7 @@ const allParcel = async (query: Record<string, string>, decodeToken: JwtPayload)
     }
 }
 
+//  admin parcel services
 const getAllParcelByAdmin = async (query: Record<string, string>, decodeToken: JwtPayload) => {
 
     if (decodeToken.role !== Role.ADMIN) {
@@ -176,6 +178,73 @@ const updateIsBlocked = async (id: string, decodeToken: JwtPayload) => {
     }
 }
 
+const updateCurrentStatus = async (id: string, decodeToken: JwtPayload) => {
+    if (decodeToken.role !== Role.ADMIN) {
+        throw new Error("you are not access this route")
+    }
+
+    const parcel = await Parcel.findById(id);
+
+    if (!parcel?.currentStatus) {
+        throw new Error("parcel current status not found")
+    }
+
+    let updateData: any;
+
+    if (parcel.currentStatus === ParcelStatus.REQUESTED) {
+        updateData = await Parcel.findByIdAndUpdate(
+            id,
+            {
+                currentStatus: ParcelStatus.APPROVED,
+                statusLogs: [updateStatusLogsApproved]
+
+            },
+            { new: true, runValidators: true }
+        )
+    }
+    else if (parcel.currentStatus === ParcelStatus.APPROVED) {
+        updateData = await Parcel.findByIdAndUpdate(
+            id,
+            {
+                currentStatus: ParcelStatus.DISPATCHED,
+                statusLogs: [updateStatusLogsDispatched]
+
+            },
+            { new: true, runValidators: true }
+        )
+    }
+    else if (parcel.currentStatus === ParcelStatus.DISPATCHED) {
+        updateData = null
+        throw new Error("your update data already DISPATCHED")
+    }
+    return {
+        updateData,
+
+    }
+}
+
+// Receiver parcel services
+const incomingParcel = async (decodedToken: JwtPayload) => {
+
+    const incoming = await Parcel.find({ receiver: decodedToken.userId })
+        .populate("sender", "name email address phone")
+        .populate("receiver", "name email address phone")
+
+    const totalCount = await Parcel.countDocuments({ receiver: decodedToken.userId });
+
+    const meta: TMeta = {
+        total: totalCount,
+        limit: 0,
+        page: 0,
+        totalPage: 0
+    }
+
+    return {
+        incoming,
+        meta
+    }
+}
+
 
 
 
@@ -184,5 +253,8 @@ export const ParcelService = {
     cancelParcel,
     allParcel,
     getAllParcelByAdmin,
-    updateIsBlocked
+    updateIsBlocked,
+    updateCurrentStatus,
+    incomingParcel,
+
 }

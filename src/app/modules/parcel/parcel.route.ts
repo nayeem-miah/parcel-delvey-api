@@ -31,7 +31,20 @@ router.get("/all",
 router.patch("/blocked/:id",
     checkAuth(Role.ADMIN),
     ParcelController.updateIsBlocked
+);
+
+router.patch("/current-status/:id",
+    checkAuth(Role.ADMIN),
+    ParcelController.updateCurrentStatus
+);
+
+router.get("/incoming",
+    checkAuth(Role.RECEIVER),
+    ParcelController.incomingParcel
+
 )
+
+
 
 
 

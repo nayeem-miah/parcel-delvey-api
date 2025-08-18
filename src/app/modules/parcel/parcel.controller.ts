@@ -8,7 +8,7 @@ import { calculateFrr } from "../../utils/calculateFee";
 import { IStatusLog, ParcelStatus } from "./parcel.interface";
 import { User } from "../user/user.model";
 
-
+//  sender parcel
 const createParcel = catchAsync(async (req: Request, res: Response) => {
 
     const decodeToken = req.user
@@ -79,7 +79,7 @@ const allParcel = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
-
+//  admin parcel
 const getAllParcelByAdmin = catchAsync(async (req: Request, res: Response) => {
     const query = req.query;
     const decodeToken = req.user
@@ -110,6 +110,42 @@ const updateIsBlocked = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
+const updateCurrentStatus = catchAsync(async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const decodeToken = req.user
+
+    const result = await ParcelService.updateCurrentStatus(id, decodeToken);
+
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: `parcel current status  ${result.updateData.currentStatus} success✅`,
+        data: result.updateData,
+        // meta: result.meta
+    })
+})
+
+// Receiver parcel
+const incomingParcel = catchAsync(async (req: Request, res: Response) => {
+    const decodeToken = req.user
+
+    const result = await ParcelService.incomingParcel(decodeToken);
+
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: `parcel received success✅`,
+        data: result.incoming,
+        meta: {
+            total: result.meta.total,
+            limit: result.meta.limit,
+            page: result.meta.page,
+            totalPage: result.meta.page
+        }
+    })
+})
+
+
 
 
 
@@ -125,5 +161,7 @@ export const ParcelController = {
     cancelParcel,
     allParcel,
     getAllParcelByAdmin,
-    updateIsBlocked
+    updateIsBlocked,
+    updateCurrentStatus,
+    incomingParcel,
 }
