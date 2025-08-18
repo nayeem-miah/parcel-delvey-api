@@ -6,7 +6,7 @@ import { Parcel } from "./parcel.model";
 import { Role } from "../user/user.interface";
 import { TMeta } from "../../utils/sendResponse";
 import { User } from "../user/user.model";
-import { updateStatusLogsApproved, updateStatusLogsDispatched } from "../../utils/statusLog";
+import { updateStatusLogsApproved, updateStatusLogsDelivered, updateStatusLogsDispatched } from "../../utils/statusLog";
 
 //  sender services
 const createParcel = async (payload: Partial<IParcel>) => {
@@ -180,48 +180,38 @@ const updateIsBlocked = async (id: string, decodeToken: JwtPayload) => {
 
 const updateCurrentStatus = async (id: string, decodeToken: JwtPayload) => {
     if (decodeToken.role !== Role.ADMIN) {
-        throw new Error("you are not access this route")
+        throw new Error("you are not authorized to access this route");
     }
 
     const parcel = await Parcel.findById(id);
 
-    if (!parcel?.currentStatus) {
-        throw new Error("parcel current status not found")
-    }
+    if (!parcel) throw new Error("parcel not found");
 
-    let updateData: any;
+    let newStatus: ParcelStatus | null = null;
+    let newLog: IStatusLog | null = null;
 
     if (parcel.currentStatus === ParcelStatus.REQUESTED) {
-        updateData = await Parcel.findByIdAndUpdate(
-            id,
-            {
-                currentStatus: ParcelStatus.APPROVED,
-                statusLogs: [updateStatusLogsApproved]
+        newStatus = ParcelStatus.APPROVED;
+        newLog = updateStatusLogsApproved;
+    } else if (parcel.currentStatus === ParcelStatus.APPROVED) {
+        newStatus = ParcelStatus.DISPATCHED;
+        newLog = updateStatusLogsDispatched;
+    } else if (parcel.currentStatus === ParcelStatus.DISPATCHED) {
+        throw new Error("Parcel already DISPATCHED");
+    }
 
-            },
-            { new: true, runValidators: true }
-        )
-    }
-    else if (parcel.currentStatus === ParcelStatus.APPROVED) {
-        updateData = await Parcel.findByIdAndUpdate(
-            id,
-            {
-                currentStatus: ParcelStatus.DISPATCHED,
-                statusLogs: [updateStatusLogsDispatched]
+    const updateData = await Parcel.findByIdAndUpdate(
+        id,
+        {
+            $set: { currentStatus: newStatus },
+            $push: { statusLogs: newLog }
+        },
+        { new: true, runValidators: true }
+    );
 
-            },
-            { new: true, runValidators: true }
-        )
-    }
-    else if (parcel.currentStatus === ParcelStatus.DISPATCHED) {
-        updateData = null
-        throw new Error("your update data already DISPATCHED")
-    }
-    return {
-        updateData,
+    return { updateData };
+};
 
-    }
-}
 
 // Receiver parcel services
 const incomingParcel = async (decodedToken: JwtPayload) => {
@@ -245,6 +235,38 @@ const incomingParcel = async (decodedToken: JwtPayload) => {
     }
 }
 
+const confirmCurrentStatus = async (id: string, decodedToken: JwtPayload) => {
+
+    if (decodedToken.role !== Role.RECEIVER) {
+        throw new Error("you are not authorized this route")
+    }
+
+    const parcel = await Parcel.findOne({ receiver: decodedToken.userId, _id: id });
+
+    if (!parcel) {
+        throw new Error("parcel not fount")
+    }
+
+    if (parcel.currentStatus !== ParcelStatus.DISPATCHED) {
+        throw new Error(`Invalid status: Parcel is currently ${parcel.currentStatus}, expected DISPATCHED.`);
+    };
+
+
+
+    const confirmStatus = await Parcel.findByIdAndUpdate(
+        parcel._id,
+        {
+            $set: { currentStatus: ParcelStatus.DELIVERED },
+            $push: { statusLogs: updateStatusLogsDelivered }
+        },
+        { new: true, runValidators: true }
+    )
+
+    return {
+        confirmStatus
+    }
+}
+
 
 
 
@@ -256,5 +278,6 @@ export const ParcelService = {
     updateIsBlocked,
     updateCurrentStatus,
     incomingParcel,
+    confirmCurrentStatus,
 
 }

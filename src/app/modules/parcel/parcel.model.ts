@@ -14,7 +14,7 @@ const StatusLogSchema = new Schema<IStatusLog>(
         timestamp: { type: Date, default: Date.now },
         updatedBy: {
             type: String,
-            enum: Object.values(Role),
+            enum: [...Object.values(Role)],
             default: Role.SENDER,
 
         },

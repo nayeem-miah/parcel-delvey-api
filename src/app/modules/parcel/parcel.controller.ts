@@ -5,8 +5,9 @@ import { sendResponse } from "../../utils/sendResponse";
 import { StatusCodes } from "http-status-codes";
 import { generateTrackingId } from "../../utils/trackingId";
 import { calculateFrr } from "../../utils/calculateFee";
-import { IStatusLog, ParcelStatus } from "./parcel.interface";
+import { ParcelStatus } from "./parcel.interface";
 import { User } from "../user/user.model";
+import { initialStatusLog } from "../../utils/statusLog";
 
 //  sender parcel
 const createParcel = catchAsync(async (req: Request, res: Response) => {
@@ -23,11 +24,7 @@ const createParcel = catchAsync(async (req: Request, res: Response) => {
 
     const totalFrr = calculateFrr(req.body.weight as number);
 
-    const initialStatusLog: IStatusLog = {
-        status: ParcelStatus.REQUESTED,
-        timestamp: new Date(),
-        updatedBy: decodeToken.role || "SENDER",
-    };
+
     const payload = {
         ...req.body,
         tracking_id: trackingId,
@@ -119,7 +116,7 @@ const updateCurrentStatus = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
-        message: `parcel current status  ${result.updateData.currentStatus} success✅`,
+        message: `parcel current status  ${result.updateData?.currentStatus} success✅`,
         data: result.updateData,
         // meta: result.meta
     })
@@ -145,8 +142,20 @@ const incomingParcel = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
+const confirmCurrentStatus = catchAsync(async (req: Request, res: Response) => {
+    const id = req.params.id
+    const decodeToken = req.user
 
+    const result = await ParcelService.confirmCurrentStatus(id, decodeToken);
 
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: `parcel DELIVERED success✅`,
+        data: result.confirmStatus,
+
+    })
+})
 
 
 
@@ -164,4 +173,5 @@ export const ParcelController = {
     updateIsBlocked,
     updateCurrentStatus,
     incomingParcel,
+    confirmCurrentStatus,
 }

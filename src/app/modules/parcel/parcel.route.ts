@@ -7,6 +7,7 @@ import { ParcelController } from "./parcel.controller";
 
 const router = Router();
 
+//  sender route
 router.post("/",
     validateRequest(createParcelValidation),
     checkAuth(Role.SENDER, Role.ADMIN),
@@ -23,6 +24,7 @@ router.get("/me",
     ParcelController.allParcel
 );
 
+//  admin route
 router.get("/all",
     checkAuth(Role.ADMIN),
     ParcelController.getAllParcelByAdmin
@@ -38,10 +40,16 @@ router.patch("/current-status/:id",
     ParcelController.updateCurrentStatus
 );
 
+//  receiver route
 router.get("/incoming",
     checkAuth(Role.RECEIVER),
     ParcelController.incomingParcel
 
+)
+
+router.patch("/confirm-status/:id",
+    checkAuth(Role.RECEIVER),
+    ParcelController.confirmCurrentStatus
 )
 
 

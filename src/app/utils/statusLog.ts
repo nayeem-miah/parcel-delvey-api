@@ -1,6 +1,13 @@
 import { IStatusLog, ParcelStatus } from "../modules/parcel/parcel.interface";
 import { Role } from "../modules/user/user.interface";
 
+export const initialStatusLog: IStatusLog = {
+    status: ParcelStatus.REQUESTED,
+    timestamp: new Date(),
+    updatedBy: Role.SENDER || Role.ADMIN || "SENDER",
+};
+
+
 export const updateStatusLogsApproved: IStatusLog = {
     status: ParcelStatus.APPROVED,
     timestamp: new Date(),
@@ -16,3 +23,10 @@ export const updateStatusLogsInTransit: IStatusLog = {
     timestamp: new Date(),
     updatedBy: Role.ADMIN || "ADMIN"
 }
+
+
+export const updateStatusLogsDelivered = {
+    status: ParcelStatus.DELIVERED,
+    timestamp: new Date(),
+    updatedBy: Role.RECEIVER || "RECEIVER",
+};

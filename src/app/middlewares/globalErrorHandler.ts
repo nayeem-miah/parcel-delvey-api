@@ -5,6 +5,7 @@ import { handleDuplicate } from "../helpers/handleDuplicate";
 import { TErrorSource } from "../interfaces/error.types";
 import { handleZodError } from "../helpers/handleZodError";
 import { envVars } from "../config/env";
+// import mongoose from "mongoose";
 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -37,6 +38,19 @@ const globalErrorHandler = (err: any, req: Request, res: Response, next: NextFun
         statusCode = 500;
         message = err.message
     }
+    //     else if (err instanceof mongoose.Error.CastError) {
+    //         statusCode = 400;
+    //         message = `Invalid value for field "${err.path}": ${err.value}`
+    //     }
+
+
+    //     // Handle Mongoose ValidationError
+    //    else if (err instanceof mongoose.Error.ValidationError) {
+    //         const errors = Object.values(err.errors).map((el: any) => el.message);
+    //         statusCode = 400;
+    //         message = "Validation Error"
+    //         err = errors
+    //     }
 
     res.status(statusCode).json({
         success: false,

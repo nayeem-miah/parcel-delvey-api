@@ -1,12 +1,13 @@
 // src/modules/parcel/parcel.validation.ts
 import { z } from "zod";
 import { ParcelStatus } from "./parcel.interface";
+import { Role } from "../user/user.interface";
 
 // status log schema
 const StatusLogValidation = z.object({
-    status: z.enum(ParcelStatus).default(ParcelStatus.REQUESTED).optional(),
-    timestamp: z.date().optional(),
-    updatedBy: z.enum(ParcelStatus).default(ParcelStatus.REQUESTED).optional(),
+    status: z.nativeEnum(ParcelStatus),
+    timestamp: z.union([z.string(), z.date()]).default(() => new Date()),
+    updatedBy: z.nativeEnum(Role),
     note: z.string().optional(),
 });
 
