@@ -157,10 +157,20 @@ const confirmCurrentStatus = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
+const deliveryHistory = catchAsync(async (req: Request, res: Response) => {
 
+    const decodeToken = req.user
 
+    const result = await ParcelService.deliveryHistory(decodeToken);
 
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: `all delivery history received success✅`,
+        data: result.parcel,
 
+    })
+})
 
 
 
@@ -174,4 +184,5 @@ export const ParcelController = {
     updateCurrentStatus,
     incomingParcel,
     confirmCurrentStatus,
+    deliveryHistory
 }

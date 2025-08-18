@@ -267,6 +267,23 @@ const confirmCurrentStatus = async (id: string, decodedToken: JwtPayload) => {
     }
 }
 
+const deliveryHistory = async (decodedToken: JwtPayload) => {
+
+    if (!decodedToken) throw new Error("decode token is not found")
+
+    const parcel = await Parcel.find({
+        receiver: decodedToken.userId,
+        currentStatus: ParcelStatus.DELIVERED
+    })
+        .populate('sender', 'name email address')
+        .populate('receiver', 'name email address')
+        .sort({ createdAt: -1 })
+
+    return {
+        parcel
+    }
+
+}
 
 
 
@@ -279,5 +296,6 @@ export const ParcelService = {
     updateCurrentStatus,
     incomingParcel,
     confirmCurrentStatus,
+    deliveryHistory
 
 }

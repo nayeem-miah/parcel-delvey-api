@@ -52,9 +52,10 @@ router.patch("/confirm-status/:id",
     ParcelController.confirmCurrentStatus
 )
 
-
-
-
+router.get("/history",
+    checkAuth(Role.RECEIVER),
+    ParcelController.deliveryHistory
+)
 
 
 
