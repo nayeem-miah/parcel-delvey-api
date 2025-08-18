@@ -11,6 +11,11 @@ router.post("/",
     validateRequest(createParcelValidation),
     checkAuth(Role.SENDER, Role.ADMIN),
     ParcelController.createParcel
+);
+
+router.patch("/cancel/:id",
+    checkAuth(Role.SENDER),
+    ParcelController.cancelParcel
 )
 
 

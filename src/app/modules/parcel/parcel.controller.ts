@@ -40,6 +40,21 @@ const createParcel = catchAsync(async (req: Request, res: Response) => {
     })
 
     // 
+});
+
+const cancelParcel = catchAsync(async (req: Request, res: Response) => {
+
+    const { id } = req.params;
+    const decodeToken = req.user
+
+    const result = await ParcelService.cancelParcel(id, decodeToken);
+
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Parcel cancel success ✅",
+        data: result.UpdatedCancelled
+    })
 })
 
 
@@ -56,5 +71,6 @@ const createParcel = catchAsync(async (req: Request, res: Response) => {
 
 
 export const ParcelController = {
-    createParcel
+    createParcel,
+    cancelParcel
 }
