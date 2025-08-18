@@ -34,4 +34,5 @@ export interface IParcel {
     expectedDeliveryDate?: Date;
     deliveredAt?: Date;
     isBlocked?: boolean;
+    createdAt: Date
 }

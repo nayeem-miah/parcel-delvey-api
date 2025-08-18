@@ -20,4 +20,5 @@ export interface IUser {
     role: Role,
     isActive?: IsActive,
     address?: string;
+    phone?: string;
 }

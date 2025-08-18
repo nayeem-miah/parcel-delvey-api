@@ -16,7 +16,13 @@ router.post("/",
 router.patch("/cancel/:id",
     checkAuth(Role.SENDER),
     ParcelController.cancelParcel
-)
+);
+
+router.get("/me",
+    checkAuth(Role.SENDER),
+    ParcelController.allParcel
+);
+
 
 
 

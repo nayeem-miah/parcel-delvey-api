@@ -1,6 +1,6 @@
 import { Response } from "express";
 
-interface TMeta {
+export interface TMeta {
     page: number;
     limit: number;
     totalPage: number;

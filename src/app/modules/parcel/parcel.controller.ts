@@ -6,11 +6,18 @@ import { StatusCodes } from "http-status-codes";
 import { generateTrackingId } from "../../utils/trackingId";
 import { calculateFrr } from "../../utils/calculateFee";
 import { IStatusLog, ParcelStatus } from "./parcel.interface";
+import { User } from "../user/user.model";
 
 
 const createParcel = catchAsync(async (req: Request, res: Response) => {
 
     const decodeToken = req.user
+    // find user 
+    const isExistUSer = await User.findOne({ email: decodeToken.email });
+
+    if (!(isExistUSer?.address && isExistUSer.address.length > 0)) {
+        throw new Error("please update your profile address ")
+    }
 
     const trackingId = generateTrackingId();
 
@@ -57,6 +64,21 @@ const cancelParcel = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
+const allParcel = catchAsync(async (req: Request, res: Response) => {
+    const query = req.query;
+    const decodeToken = req.user
+
+    const result = await ParcelService.allParcel(query as Record<string, string>, decodeToken);
+
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Sender Parcel retrieved success ✅",
+        data: result.data,
+        meta: result.meta
+    })
+})
+
 
 
 
@@ -72,5 +94,6 @@ const cancelParcel = catchAsync(async (req: Request, res: Response) => {
 
 export const ParcelController = {
     createParcel,
-    cancelParcel
+    cancelParcel,
+    allParcel
 }

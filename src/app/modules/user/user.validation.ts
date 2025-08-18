@@ -21,6 +21,12 @@ export const createUserZodSchema = z.object({
     isActive: z.enum(Object.values(IsActive))
         .default(IsActive.ACTIVE).optional(),
 
+    phone: z.string()
+        .regex(/^(\+8801|8801|01)[0-9]{9}$/, {
+            message: "Invalid Bangladeshi phone number"
+        })
+        .optional(),
+
     address: z.string().optional(),
 })
 
@@ -29,6 +35,12 @@ export const updateUserZodSchema = z.object({
     name: z.string().min(2, "Name is short minimum 2 character")
         .optional(),
     isActive: z.enum(Object.values(IsActive)).optional(),
+
+    phone: z.string()
+        .regex(/^(\+8801|8801|01)[0-9]{9}$/, {
+            message: "Invalid Bangladeshi phone number"
+        })
+        .optional(),
 
     address: z.string().optional(),
 })

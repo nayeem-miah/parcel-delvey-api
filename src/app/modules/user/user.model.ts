@@ -28,6 +28,10 @@ const userSchema = new Schema<IUser>({
         enum: Object.values(IsActive),
         default: IsActive.ACTIVE
     },
+    phone: {
+        type: String,
+        default: ""
+    },
     address: {
         type: String,
         default: ""
