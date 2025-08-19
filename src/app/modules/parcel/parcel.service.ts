@@ -32,7 +32,6 @@ const cancelParcel = async (tracking_id: string, decodeToken: JwtPayload) => {
         throw new Error(`Parcel already ${parcel.currentStatus}, cannot be cancelled!`)
     };
 
-
     //  change status
     const initialStatusLog: IStatusLog = {
         status: ParcelStatus.CANCELLED,
@@ -110,8 +109,6 @@ const getAllParcelByAdmin = async (query: Record<string, string>, decodeToken: J
 
     // all?filter=REQUESTED
     const filter = query.filter ? { currentStatus: query.filter } : {};
-
-
 
     if (decodeToken.role !== Role.ADMIN) {
         throw new Error("You can not access this route")
