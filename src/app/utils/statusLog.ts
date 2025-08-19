@@ -1,23 +1,41 @@
 import { IStatusLog, ParcelStatus } from "../modules/parcel/parcel.interface";
 import { Role } from "../modules/user/user.interface";
 
-export const initialStatusLog: IStatusLog = {
-    status: ParcelStatus.REQUESTED,
-    timestamp: new Date(),
-    updatedBy: Role.SENDER || Role.ADMIN || "SENDER",
-};
 
+export const initialStatusLog = (role: Role, note: string): IStatusLog => {
+    return {
+        status: ParcelStatus.REQUESTED,
+        timestamp: new Date(),
+        updatedBy: role || "SENDER",
+        note: note || "Parcel created",
+    }
+}
 
-export const updateStatusLogsApproved: IStatusLog = {
-    status: ParcelStatus.APPROVED,
-    timestamp: new Date(),
-    updatedBy: Role.ADMIN || "ADMIN"
+export const cancelLog = (role: Role, note: string): IStatusLog => {
+    return {
+        status: ParcelStatus.CANCELLED,
+        timestamp: new Date(),
+        updatedBy: role || "SENDER",
+        note: note || "Parcel cancelled",
+    }
 }
-export const updateStatusLogsDispatched: IStatusLog = {
-    status: ParcelStatus.DISPATCHED,
-    timestamp: new Date(),
-    updatedBy: Role.ADMIN || "ADMIN"
+export const updateStatusLogsApproved = (role: Role, note: string): IStatusLog => {
+    return {
+        status: ParcelStatus.APPROVED,
+        timestamp: new Date(),
+        updatedBy: role || "ADMIN",
+        note: note || "Parcel cancelled",
+    }
 }
+export const updateStatusLogsDispatched = (role: Role, note: string): IStatusLog => {
+    return {
+        status: ParcelStatus.DISPATCHED,
+        timestamp: new Date(),
+        updatedBy: role || Role.ADMIN || "ADMIN",
+        note: note || "Parcel cancelled",
+    }
+}
+
 export const updateStatusLogsInTransit: IStatusLog = {
     status: ParcelStatus.IN_TRANSIT,
     timestamp: new Date(),

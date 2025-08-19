@@ -30,7 +30,7 @@ const createParcel = catchAsync(async (req: Request, res: Response) => {
         tracking_id: trackingId,
         currentStatus: ParcelStatus.REQUESTED,
         fee: totalFrr,
-        statusLogs: [initialStatusLog]
+        statusLogs: [initialStatusLog(isExistUSer.role, req.body.note)]
     }
 
 
@@ -49,9 +49,10 @@ const createParcel = catchAsync(async (req: Request, res: Response) => {
 const cancelParcel = catchAsync(async (req: Request, res: Response) => {
 
     const { id } = req.params;
-    const decodeToken = req.user
+    const decodeToken = req.user;
+    const { note } = req.body || "parcel canceled"
 
-    const result = await ParcelService.cancelParcel(id, decodeToken);
+    const result = await ParcelService.cancelParcel(id, decodeToken, note);
 
     sendResponse(res, {
         statusCode: StatusCodes.OK,
@@ -110,8 +111,9 @@ const updateIsBlocked = catchAsync(async (req: Request, res: Response) => {
 const updateCurrentStatus = catchAsync(async (req: Request, res: Response) => {
     const id = req.params.id;
     const decodeToken = req.user
+    const { note } = req.body || "parcel current status updated"
 
-    const result = await ParcelService.updateCurrentStatus(id, decodeToken);
+    const result = await ParcelService.updateCurrentStatus(id, decodeToken, note);
 
     sendResponse(res, {
         statusCode: StatusCodes.OK,

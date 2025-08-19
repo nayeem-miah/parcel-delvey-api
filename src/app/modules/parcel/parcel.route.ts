@@ -15,7 +15,7 @@ router.post("/",
 );
 
 router.patch("/cancel/:id",
-    checkAuth(Role.SENDER),
+    checkAuth(Role.SENDER, Role.ADMIN),
     ParcelController.cancelParcel
 );
 

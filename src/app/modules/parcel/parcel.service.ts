@@ -6,7 +6,7 @@ import { Parcel } from "./parcel.model";
 import { Role } from "../user/user.interface";
 import { TMeta } from "../../utils/sendResponse";
 import { User } from "../user/user.model";
-import { updateStatusLogsApproved, updateStatusLogsDelivered, updateStatusLogsDispatched } from "../../utils/statusLog";
+import { cancelLog, updateStatusLogsApproved, updateStatusLogsDelivered, updateStatusLogsDispatched } from "../../utils/statusLog";
 
 //  sender services
 const createParcel = async (payload: Partial<IParcel>) => {
@@ -18,38 +18,38 @@ const createParcel = async (payload: Partial<IParcel>) => {
 
 }
 
-const cancelParcel = async (tracking_id: string, decodeToken: JwtPayload) => {
+const cancelParcel = async (_id: string, decodeToken: JwtPayload, note: string) => {
 
     //  find parcel by tracking_id
-    const parcel = await Parcel.findOne({ tracking_id });
+    const parcel = await Parcel.findOne({ _id });
 
     if (!parcel) {
         throw new Error("parcel not found!")
     }
 
-    //  checking parcel status
-    if (parcel.currentStatus !== ParcelStatus.REQUESTED && parcel.currentStatus !== ParcelStatus.APPROVED) {
-        throw new Error(`Parcel already ${parcel.currentStatus}, cannot be cancelled!`)
-    };
-
-    //  change status
-    const initialStatusLog: IStatusLog = {
-        status: ParcelStatus.CANCELLED,
-        timestamp: new Date(),
-        updatedBy: decodeToken.role || "SENDER",
-        note: "receiver do not want this parcel so i can cancel this parcel"
-    };
-
-    const updateData = {
-        currentStatus: ParcelStatus.CANCELLED,
-        statusLogs: [initialStatusLog]
-
+    //  checking parcel status checking sender
+    if (decodeToken.role === Role.SENDER) {
+        if (parcel.currentStatus !== ParcelStatus.REQUESTED && parcel.currentStatus !== ParcelStatus.APPROVED) {
+            throw new Error(`Parcel already ${parcel.currentStatus}, cannot be cancelled!`)
+        };
     }
 
+    //  checking admin
+    if (decodeToken.role === Role.ADMIN) {
+        if (parcel.currentStatus === ParcelStatus.DELIVERED) {
+            throw new Error("admin can not cancel delivered parcel !")
+        }
+        if (parcel.currentStatus === ParcelStatus.CANCELLED) {
+            throw new Error("this parcel already cancel !")
+        }
+    }
 
-    const UpdatedCancelled = await Parcel.findOneAndUpdate(
-        { tracking_id },
-        updateData,
+    const UpdatedCancelled = await Parcel.findByIdAndUpdate(
+        _id,
+        {
+            $set: { currentStatus: ParcelStatus.CANCELLED },
+            $push: { statusLogs: cancelLog(decodeToken.role, note) }
+        },
         { new: true, runValidators: true }
     );
 
@@ -181,7 +181,7 @@ const updateIsBlocked = async (id: string, decodeToken: JwtPayload) => {
     }
 }
 
-const updateCurrentStatus = async (id: string, decodeToken: JwtPayload) => {
+const updateCurrentStatus = async (id: string, decodeToken: JwtPayload, note: string) => {
     if (decodeToken.role !== Role.ADMIN) {
         throw new Error("you are not authorized to access this route");
     }
@@ -193,12 +193,18 @@ const updateCurrentStatus = async (id: string, decodeToken: JwtPayload) => {
     let newStatus: ParcelStatus | null = null;
     let newLog: IStatusLog | null = null;
 
-    if (parcel.currentStatus === ParcelStatus.REQUESTED) {
+    if (parcel.currentStatus === ParcelStatus.CANCELLED) {
+        throw new Error("this parcel already cancel! so you cannot update current status")
+    }
+
+    else if (parcel.currentStatus === ParcelStatus.REQUESTED) {
         newStatus = ParcelStatus.APPROVED;
-        newLog = updateStatusLogsApproved;
+        newLog = updateStatusLogsApproved(Role.ADMIN, note);
+
     } else if (parcel.currentStatus === ParcelStatus.APPROVED) {
         newStatus = ParcelStatus.DISPATCHED;
-        newLog = updateStatusLogsDispatched;
+        newLog = updateStatusLogsDispatched(Role.ADMIN, note);
+
     } else if (parcel.currentStatus === ParcelStatus.DISPATCHED) {
         throw new Error("Parcel already DISPATCHED");
     }
