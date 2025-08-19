@@ -108,6 +108,11 @@ const allParcel = async (query: Record<string, string>, decodeToken: JwtPayload)
 //  admin parcel services
 const getAllParcelByAdmin = async (query: Record<string, string>, decodeToken: JwtPayload) => {
 
+    // all?filter=REQUESTED
+    const filter = query.filter ? { currentStatus: query.filter } : {};
+
+
+
     if (decodeToken.role !== Role.ADMIN) {
         throw new Error("You can not access this route")
     }
@@ -119,10 +124,11 @@ const getAllParcelByAdmin = async (query: Record<string, string>, decodeToken: J
 
 
 
-    const totalCountParcel = await Parcel.countDocuments()
+    const totalCountParcel = await Parcel.countDocuments(filter)
     const totalPage = Math.ceil(totalCountParcel / limit)
+
     // sender parcel find 
-    const senderParcel = await Parcel.find()
+    const senderParcel = await Parcel.find(filter)
         .populate('sender', 'name email address')
         .populate('receiver', 'name email address')
         .sort({ createdAt: -1 })
