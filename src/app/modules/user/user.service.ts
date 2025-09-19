@@ -37,7 +37,7 @@ const userProfile = async (userId: string) => {
 }
 
 const allUser = async () => {
-    const user = await User.find();
+    const user = await User.find().select("-password");
 
     return {
         user
@@ -53,7 +53,6 @@ const singleUser = async (id: string) => {
 }
 
 const updateUser = async (userId: string, payload: Partial<IUser>, decodedToken: JwtPayload) => {
-
     if (decodedToken.role === Role.RECEIVER || decodedToken.role === Role.SENDER) {
         if (userId !== decodedToken.userId) {
             throw new Error("you are not authorized")

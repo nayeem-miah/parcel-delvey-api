@@ -36,7 +36,7 @@ const ParcelSchema = new Schema<IParcel>(
         },
         type: { type: String, required: true },
         weight: { type: Number, required: true },
-        fee: { type: Number, required: true },
+        fee: { type: Number },
 
         sender: {
             type: Schema.Types.ObjectId,
