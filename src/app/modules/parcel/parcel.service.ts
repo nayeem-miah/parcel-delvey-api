@@ -294,6 +294,18 @@ const deliveryHistory = async (decodedToken: JwtPayload) => {
 
 }
 
+const achievement = async () => {
+
+    const parcelCount = await Parcel.countDocuments();
+    const clientCount = await User.countDocuments();
+
+    return {
+        parcelCount,
+        clientCount
+    }
+
+}
+
 
 
 export const ParcelService = {
@@ -305,6 +317,7 @@ export const ParcelService = {
     updateCurrentStatus,
     incomingParcel,
     confirmCurrentStatus,
-    deliveryHistory
+    deliveryHistory,
+    achievement
 
 }

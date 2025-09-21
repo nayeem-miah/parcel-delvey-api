@@ -56,6 +56,10 @@ router.get("/history",
     checkAuth(Role.RECEIVER),
     ParcelController.deliveryHistory
 )
+router.get("/achievement",
+    ParcelController.achievement
+)
+
 
 
 

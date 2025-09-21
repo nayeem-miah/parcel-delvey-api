@@ -173,6 +173,18 @@ const deliveryHistory = catchAsync(async (req: Request, res: Response) => {
 
     })
 })
+const achievement = catchAsync(async (req: Request, res: Response) => {
+
+    const result = await ParcelService.achievement();
+
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: `all delivery history received success✅`,
+        data: result,
+
+    })
+})
 
 
 
@@ -186,5 +198,6 @@ export const ParcelController = {
     updateCurrentStatus,
     incomingParcel,
     confirmCurrentStatus,
-    deliveryHistory
+    deliveryHistory,
+    achievement
 }
