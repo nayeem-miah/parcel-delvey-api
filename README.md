@@ -8,7 +8,7 @@ system (inspired by Pathao Courier or Sundarban) built using
 ---
 
 
-### live link : https://parcel-delivery-api-swart.vercel.app
+### live link : https://parcel-delivary-05.vercel.app
 
 ## 🚀 Project Overview
 

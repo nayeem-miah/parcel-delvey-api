@@ -11,7 +11,8 @@ export const AuthCookie = (res: Response, userInfo: authToken) => {
         res.cookie("accessToken", userInfo.accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            sameSite: process.env.NODE_ENV === "production" ?
+                "none" : "lax",
         });
     }
 }

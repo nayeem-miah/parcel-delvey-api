@@ -31,8 +31,9 @@ const logout = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(void 0, void
     // clear cookie jwt token
     res.clearCookie("accessToken", {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax"
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ?
+            "none" : "lax",
     });
     (0, sendResponse_1.sendResponse)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
