@@ -11,6 +11,9 @@ interface IEnvFile {
     ADMIN_PASS: string;
     JWT_SECRET: string;
     JWT_EXPIRE: string;
+    GOOGLE_CLIENT_ID: string;
+    GOOGLE_CLIENT_SECRET: string;
+    GOOGLE_CALLBACK_URL: string;
 }
 
 const localVariable = (): IEnvFile => {
@@ -24,6 +27,9 @@ const localVariable = (): IEnvFile => {
         "ADMIN_PASS",
         "JWT_SECRET",
         "JWT_EXPIRE",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "GOOGLE_CALLBACK_URL",
     ]
 
     requireVariable.forEach(key => {
@@ -41,6 +47,9 @@ const localVariable = (): IEnvFile => {
         ADMIN_PASS: process.env.ADMIN_PASS as string,
         JWT_SECRET: process.env.JWT_SECRET as string,
         JWT_EXPIRE: process.env.JWT_EXPIRE as string,
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
+        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
+        GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
     }
 
 };

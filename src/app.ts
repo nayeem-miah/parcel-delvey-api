@@ -4,10 +4,26 @@ import notFount from "./app/middlewares/notFound";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import { router } from "./app/routes";
 import cookieParser from "cookie-parser";
+import passport from "passport";
+import expressSession from "express-session";
+import { envVars } from "./app/config/env";
+
 
 
 
 const app = express();
+
+// passport
+app.use(expressSession({
+    secret: envVars.GOOGLE_CLIENT_SECRET,
+    resave: false,
+    saveUninitialized: false
+}))
+
+
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(express.json());
 app.use(cookieParser());
