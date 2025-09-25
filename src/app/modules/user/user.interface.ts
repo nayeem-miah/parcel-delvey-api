@@ -16,7 +16,7 @@ export interface IUser {
     _id: Types.ObjectId;
     name: string;
     email: string;
-    password: string;
+    password?: string;
     role: Role,
     isActive?: IsActive,
     address?: string;

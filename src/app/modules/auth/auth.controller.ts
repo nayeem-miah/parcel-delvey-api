@@ -4,6 +4,8 @@ import { sendResponse } from "../../utils/sendResponse";
 import { StatusCodes } from "http-status-codes";
 import { AuthService } from "./auth.service";
 import { AuthCookie } from "../../utils/setCookie";
+import { createUserToken } from "../../utils/useToken";
+import { envVars } from "../../config/env";
 
 const credentialLogin = catchAsync(async (req: Request, res: Response) => {
 
@@ -39,8 +41,28 @@ const logout = catchAsync(async (req: Request, res: Response) => {
     })
 });
 
+const googleCallbackControllers = async (req: Request, res: Response) => {
+    let redirectTo = req.query.state ? req.query.state as string : "";
+
+    if (redirectTo.startsWith("/")) {
+        redirectTo = redirectTo.slice()
+    }
+    const user = req.user;
+
+    // console.log("google login user", user);
+
+    if (!user) {
+        throw new Error("user not found");
+    }
+    const tokenInfo = createUserToken(user)
+
+    AuthCookie(res, { accessToken: tokenInfo })
+
+    res.redirect(`${envVars.FRONTEND_URL}/${redirectTo}`)
+}
 
 export const AuthController = {
     credentialLogin,
-    logout
+    logout,
+    googleCallbackControllers
 }

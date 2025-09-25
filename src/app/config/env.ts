@@ -14,6 +14,9 @@ interface IEnvFile {
     GOOGLE_CLIENT_ID: string;
     GOOGLE_CLIENT_SECRET: string;
     GOOGLE_CALLBACK_URL: string;
+    EXPRESS_SESSION: string;
+    FRONTEND_URL: string;
+
 }
 
 const localVariable = (): IEnvFile => {
@@ -30,6 +33,8 @@ const localVariable = (): IEnvFile => {
         "GOOGLE_CLIENT_ID",
         "GOOGLE_CLIENT_SECRET",
         "GOOGLE_CALLBACK_URL",
+        "EXPRESS_SESSION",
+        "FRONTEND_URL"
     ]
 
     requireVariable.forEach(key => {
@@ -50,6 +55,8 @@ const localVariable = (): IEnvFile => {
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
         GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
         GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
+        EXPRESS_SESSION: process.env.EXPRESS_SESSION as string,
+        FRONTEND_URL: process.env.FRONTEND_URL as string,
     }
 
 };

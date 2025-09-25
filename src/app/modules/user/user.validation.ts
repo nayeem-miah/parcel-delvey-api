@@ -12,7 +12,7 @@ export const createUserZodSchema = z.object({
     password: z.string()
         .min(8, { message: "Password must be at least 8 characters long" })
         .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
-        .regex(/[^a-zA-Z0-9]/, { message: "Password must contain at least one special character" }),
+        .regex(/[^a-zA-Z0-9]/, { message: "Password must contain at least one special character" }).optional(),
 
     role: z.enum([Role.SENDER, Role.RECEIVER], {
         message: "Role must be either SENDER or RECEIVER"
