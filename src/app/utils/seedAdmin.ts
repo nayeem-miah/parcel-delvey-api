@@ -1,33 +1,37 @@
 import { envVars } from "../config/env";
 import { IsActive, Role } from "../modules/user/user.interface";
-import { User } from "../modules/user/user.model";
 import bcrypt from 'bcrypt';
+import prisma from "./prisma";
 
 export const seedAdmin = async () => {
     try {
-        const isExistUser = await User.findOne({ email: envVars.ADMIN_EMAIL });
+        const isExistUser = await prisma.user.findUnique({
+            where: { email: envVars.ADMIN_EMAIL }
+        });
 
         if (isExistUser) {
             console.log("⚠️ Admin user already exists, skipping...");
             return;
         }
 
-        // hash password
-        const hasPassword = await bcrypt.hash(envVars.ADMIN_PASS, Number(envVars.BCRYPT_SLOT_ROUND))
+        const hashPassword = await bcrypt.hash(
+            envVars.ADMIN_PASS,
+            Number(envVars.BCRYPT_SLOT_ROUND)
+        );
 
+        const admin = await prisma.user.create({
+            data: {
+                name: "Admin",
+                role: Role.ADMIN,
+                email: envVars.ADMIN_EMAIL,
+                password: hashPassword,
+                isActive: IsActive.ACTIVE,
+                address: "Mymensingh"
+            }
+        });
 
-        const payload = {
-            name: " admin",
-            role: Role.ADMIN,
-            email: envVars.ADMIN_EMAIL,
-            password: hasPassword,
-            isActive: IsActive.ACTIVE,
-            address: "Mymeensingh"
-        }
-
-        const superAdmin = await User.create(payload);
-        console.log(superAdmin);
+        console.log("✅ Admin user seeded successfully:", admin.email);
     } catch (error) {
-        console.log(error);
+        console.error("❌ Error seeding admin:", error);
     }
 }

@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  SENDER
+  RECEIVER
+}
+
+enum IsActive {
+  ACTIVE
+  BLOCKED
+}
+
+enum ParcelStatus {
+  REQUESTED
+  APPROVED
+  DISPATCHED
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  password  String?
+  role      Role     @default(SENDER)
+  isActive  IsActive @default(ACTIVE)
+  phone     String?  @default("")
+  address   String?  @default("")
+  
+  sentParcels     Parcel[] @relation("SentParcels")
+  receivedParcels Parcel[] @relation("ReceivedParcels")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+type StatusLog {
+  status    ParcelStatus @default(REQUESTED)
+  timestamp DateTime     @default(now())
+  updatedBy Role         @default(SENDER)
+  note      String?
+}
+
+model Parcel {
+  id                   String       @id @default(auto()) @map("_id") @db.ObjectId
+  tracking_id          String       @unique
+  type                 String
+  weight               Float
+  fee                  Float?
+  
+  senderId             String       @db.ObjectId
+  sender               User         @relation("SentParcels", fields: [senderId], references: [id])
+  senderPhone          String
+  
+  receiverId           String       @db.ObjectId
+  receiver             User         @relation("ReceivedParcels", fields: [receiverId], references: [id])
+  receiverPhone        String
+  
+  currentStatus        ParcelStatus @default(REQUESTED)
+  statusLogs           StatusLog[]
+  
+  expectedDeliveryDate DateTime?
+  deliveredAt          DateTime?
+  isBlocked            Boolean      @default(false)
+
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  @@map("parcels")
+}

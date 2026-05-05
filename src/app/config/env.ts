@@ -4,7 +4,7 @@ dotenv.config()
 
 interface IEnvFile {
     PORT: string
-    MONGODB_URI: string;
+    DATABASE_URL: string;
     NODE_ENV: "development" | "production";
     BCRYPT_SLOT_ROUND: string;
     ADMIN_EMAIL: string
@@ -16,14 +16,12 @@ interface IEnvFile {
     GOOGLE_CALLBACK_URL: string;
     EXPRESS_SESSION: string;
     FRONTEND_URL: string;
-
 }
 
 const localVariable = (): IEnvFile => {
 
     const requireVariable: string[] = [
         "PORT",
-        "MONGODB_URI",
         "NODE_ENV",
         "BCRYPT_SLOT_ROUND",
         "ADMIN_EMAIL",
@@ -34,18 +32,23 @@ const localVariable = (): IEnvFile => {
         "GOOGLE_CLIENT_SECRET",
         "GOOGLE_CALLBACK_URL",
         "EXPRESS_SESSION",
-        "FRONTEND_URL"
+        "FRONTEND_URL",
+        "DATABASE_URL"
     ]
 
+    const missingVariables: string[] = [];
     requireVariable.forEach(key => {
         if (!process.env[key]) {
-            throw new Error(`Missing required environment variable ${key}`)
+            missingVariables.push(key);
         }
-    })
+    });
+
+    if (missingVariables.length > 0) {
+        throw new Error(`❌ Missing required environment variables: ${missingVariables.join(", ")}`);
+    }
 
     return {
         PORT: process.env.PORT as string,
-        MONGODB_URI: process.env.MONGODB_URI as string,
         NODE_ENV: process.env.NODE_ENV as ("development" | "production"),
         BCRYPT_SLOT_ROUND: process.env.BCRYPT_SLOT_ROUND as string,
         ADMIN_EMAIL: process.env.ADMIN_EMAIL as string,
@@ -57,6 +60,7 @@ const localVariable = (): IEnvFile => {
         GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
         EXPRESS_SESSION: process.env.EXPRESS_SESSION as string,
         FRONTEND_URL: process.env.FRONTEND_URL as string,
+        DATABASE_URL: process.env.DATABASE_URL as string,
     }
 
 };

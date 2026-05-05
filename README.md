@@ -3,12 +3,12 @@
 
 A secure, modular, and role-based backend API for a parcel delivery
 system (inspired by Pathao Courier or Sundarban) built using
-**Express.js**, **TypeScript**, and **Mongoose**.
+**Express.js**, **TypeScript**, and **Prisma**.
 
 ---
 
 
-### live link : https://parcel-delivary-05.vercel.app
+### live link : https://parcel-delvey-api.vercel.app
 
 ## 🚀 Project Overview
 
@@ -25,7 +25,7 @@ and perform parcel delivery operations such as:
 ## 🛠️ Tech Stack
 
 - **Backend Framework**: Express.js (with TypeScript)  
-- **Database**: MongoDB with Mongoose  
+- **Database**: MongoDB with Prisma  
 - **Authentication**: JWT (JSON Web Tokens)  
 - **Password Security**: Bcrypt  
 - **Validation**: Zod / Custom Middlewares  
@@ -132,8 +132,7 @@ Create a `.env` file in the root directory and add:
 
 ```env
 PORT=5000
-MONGODB_URI=PORT=5000
-MONGODB_URI=mongodb://localhost:27017/parcelDB
+DATABASE_URL=mongodb+srv://user:pass@cluster.mongodb.net/dbname
 NODE_ENV=development
 
 BCRYPT_SLOT_ROUND=10

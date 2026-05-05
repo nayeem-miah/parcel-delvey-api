@@ -10,15 +10,12 @@ import { envVars } from "../../config/env";
 const credentialLogin = catchAsync(async (req: Request, res: Response) => {
 
     const userInfo = await AuthService.credentialLogin(req.body);
-    // console.log(result.accessToken);
-
-    //  set jwt token --- in cookie
     AuthCookie(res, userInfo)
 
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
-        message: "user login success ✅",
+        message: "Login successfully",
         data: userInfo
     })
 });
@@ -36,7 +33,7 @@ const logout = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
-        message: "user login success ✅",
+        message: "Logout successfully",
         data: null
     })
 });

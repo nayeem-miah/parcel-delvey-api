@@ -1,8 +1,8 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy, Profile, VerifyCallback } from "passport-google-oauth20";
 import { envVars } from "./env";
-import { User } from "../modules/user/user.model";
 import { IsActive, Role } from "../modules/user/user.interface";
+import prisma from "../utils/prisma";
 
 passport.use(
     new GoogleStrategy(
@@ -12,47 +12,48 @@ passport.use(
             callbackURL: envVars.GOOGLE_CALLBACK_URL
         }, async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
             try {
-
-                const email = profile.emails?.[0].value
+                const email = profile.emails?.[0].value;
                 if (!email) {
-                    return done(null, false, { message: "no email found" });
+                    return done(null, false, { message: "No email found" });
                 };
 
-                let user = await User.findOne({ email });
-                // console.log(user);
+                let user = await prisma.user.findUnique({
+                    where: { email }
+                });
 
                 if (!user) {
-                    user = await User.create({
-                        email,
-                        name: profile.displayName,
-                        role: Role.SENDER || Role.RECEIVER,
-                        isActive: IsActive.ACTIVE,
-                    })
+                    user = await prisma.user.create({
+                        data: {
+                            email,
+                            name: profile.displayName,
+                            role: Role.SENDER, // Default to SENDER
+                            isActive: IsActive.ACTIVE,
+                        }
+                    });
                 }
 
-                return done(null, user)
+                return done(null, user);
 
             } catch (error) {
-                console.log("google staggy", error);
-                return done(error)
+                console.error("Google Strategy Error:", error);
+                return done(error);
             }
         }
     )
-)
+);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 passport.serializeUser((user: any, done: (err: any, id?: unknown) => void) => {
-    done(null, user._id)
-})
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-passport.deserializeUser(async (id: string, done: any) => {
-    try {
-        const user = await User.findById(id)
-        done(null, user)
-    } catch (error) {
-        console.log(error);
-        done(error)
-    }
+    done(null, user.id);
 });
 
+passport.deserializeUser(async (id: string, done: any) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id }
+        });
+        done(null, user);
+    } catch (error) {
+        console.error("Deserialize User Error:", error);
+        done(error);
+    }
+});

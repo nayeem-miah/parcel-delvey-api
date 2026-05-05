@@ -12,21 +12,19 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: StatusCodes.CREATED,
         success: true,
-        message: "user create success success ✅",
+        message: "user create success success",
         data: result
     })
 })
 
 const userProfile = catchAsync(async (req: Request, res: Response) => {
-    const decodedToken = req.user;
-
-
-    const result = await UserService.userProfile(decodedToken.userId)
+    const decodedToken = req.user as any;
+    const result = await UserService.userProfile(decodedToken.userId as string)
 
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
-        message: "user created success ✅",
+        message: "user created success",
         data: result
     })
 })
@@ -38,8 +36,8 @@ const allUser = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
-        message: "all user received success ✅",
-        data: result.user
+        message: "all user received success",
+        data: result
     })
 })
 
@@ -51,7 +49,7 @@ const singleUser = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: StatusCodes.CREATED,
         success: true,
-        message: "user created success ✅",
+        message: "user created success",
         data: result
     })
 })
@@ -60,13 +58,13 @@ const updateUser = catchAsync(async (req: Request, res: Response) => {
 
     const userId = req.params.id;
     const payload = req.body;
-    const verifyToken = req.user
+    const verifyToken = req.user as any;
     const result = await UserService.updateUser(userId, payload, verifyToken)
 
     sendResponse(res, {
         statusCode: StatusCodes.CREATED,
         success: true,
-        message: "user update success ✅",
+        message: "user update success",
         data: result
     })
 })

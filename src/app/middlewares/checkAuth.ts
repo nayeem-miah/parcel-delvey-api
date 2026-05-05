@@ -1,46 +1,43 @@
 import { NextFunction, Request, Response } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken"
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../config/env";
-import { User } from "../modules/user/user.model";
 import { IsActive } from "../modules/user/user.interface";
+import prisma from "../utils/prisma";
+import AppError from "../utils/AppError";
+import { StatusCodes } from "http-status-codes";
 
-
-
-
-export const checkAuth = (...AuthRoutes: string[]) => async (req: Request, res: Response, next: NextFunction) => {
+export const checkAuth = (...authRoles: string[]) => async (req: Request, res: Response, next: NextFunction) => {
     try {
         const accessToken = req.headers.authorization || req.cookies.accessToken;
-        // console.log(accessToken);
 
         if (!accessToken) {
-            throw new Error("access token not found")
+            throw new AppError(StatusCodes.UNAUTHORIZED, "Access token not found");
         }
 
-        //  verify token 
-        const verifyToken = jwt.verify(accessToken, envVars.JWT_SECRET) as JwtPayload;
+        // Verify token 
+        const decoded = jwt.verify(accessToken, envVars.JWT_SECRET) as JwtPayload;
 
-        const isExistUser = await User.findOne({ email: verifyToken.email });
+        const user = await prisma.user.findUnique({
+            where: { email: decoded.email }
+        });
 
-        if (!isExistUser) {
-            throw new Error("user not found !")
+        if (!user) {
+            throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
         }
 
-        if (isExistUser.isActive === IsActive.BLOCKED) {
-            throw new Error("user is BLOCKED !")
+        if (user.isActive === IsActive.BLOCKED) {
+            throw new AppError(StatusCodes.FORBIDDEN, "Your account is blocked!");
         };
 
-        //  checking role
-        if (!AuthRoutes.includes(verifyToken.role)) {
-            throw new Error("you are not permeated to view this route !")
+        // Checking role
+        if (authRoles.length > 0 && !authRoles.includes(decoded.role)) {
+            throw new AppError(StatusCodes.FORBIDDEN, "You are not authorized to access this route!");
         }
 
-        req.user = verifyToken;
-        next()
+        req.user = decoded;
+        next();
 
     } catch (error) {
-        next(error)
+        next(error);
     }
-
-
-
 }

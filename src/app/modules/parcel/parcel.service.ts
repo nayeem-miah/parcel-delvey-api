@@ -1,312 +1,278 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { JwtPayload } from "jsonwebtoken";
-import { IParcel, IStatusLog, ParcelStatus, } from "./parcel.interface";
-import { Parcel } from "./parcel.model";
+import { ParcelStatus } from "./parcel.interface";
+import prisma from "../../utils/prisma";
+import AppError from "../../utils/AppError";
+import { StatusCodes } from "http-status-codes";
 import { Role } from "../user/user.interface";
-import { TMeta } from "../../utils/sendResponse";
-import { User } from "../user/user.model";
 import { cancelLog, updateStatusLogsApproved, updateStatusLogsDelivered, updateStatusLogsDispatched } from "../../utils/statusLog";
 
-//  sender services
-const createParcel = async (payload: Partial<IParcel>) => {
-
-    const parcel = await Parcel.create(payload);
-    return {
-        parcel
-    }
-
+const createParcel = async (payload: any) => {
+    const parcel = await prisma.parcel.create({
+        data: payload
+    });
+    return parcel;
 }
 
-const cancelParcel = async (_id: string, decodeToken: JwtPayload, note: string) => {
-
-    //  find parcel by tracking_id
-    const parcel = await Parcel.findOne({ _id });
+const cancelParcel = async (id: string, decodeToken: JwtPayload, note: string) => {
+    const parcel = await prisma.parcel.findUnique({
+        where: { id }
+    });
 
     if (!parcel) {
-        throw new Error("parcel not found!")
+        throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found!");
     }
 
-    //  checking parcel status checking sender
     if (decodeToken.role === Role.SENDER) {
         if (parcel.currentStatus !== ParcelStatus.REQUESTED && parcel.currentStatus !== ParcelStatus.APPROVED) {
-            throw new Error(`Parcel already ${parcel.currentStatus}, cannot be cancelled!`)
+            throw new AppError(StatusCodes.BAD_REQUEST, `Parcel already ${parcel.currentStatus}, cannot be cancelled!`);
         };
     }
 
-    //  checking admin
     if (decodeToken.role === Role.ADMIN) {
         if (parcel.currentStatus === ParcelStatus.DELIVERED) {
-            throw new Error("admin can not cancel delivered parcel !")
+            throw new AppError(StatusCodes.BAD_REQUEST, "Admin cannot cancel delivered parcel!");
         }
         if (parcel.currentStatus === ParcelStatus.CANCELLED) {
-            throw new Error("this parcel already cancel !")
+            throw new AppError(StatusCodes.BAD_REQUEST, "This parcel is already cancelled!");
         }
     }
 
-    const UpdatedCancelled = await Parcel.findByIdAndUpdate(
-        _id,
-        {
-            $set: { currentStatus: ParcelStatus.CANCELLED },
-            $push: { statusLogs: cancelLog(decodeToken.role, note) }
-        },
-        { new: true, runValidators: true }
-    );
+    const updatedParcel = await prisma.parcel.update({
+        where: { id },
+        data: {
+            currentStatus: ParcelStatus.CANCELLED,
+            statusLogs: {
+                push: cancelLog(decodeToken.role, note)
+            }
+        }
+    });
 
-    return {
-        UpdatedCancelled
-    }
+    return updatedParcel;
 };
 
 const allParcel = async (query: Record<string, string>, decodeToken: JwtPayload) => {
-
     if (decodeToken.role !== Role.SENDER) {
-        throw new Error("You can not access this route")
+        throw new AppError(StatusCodes.FORBIDDEN, "You cannot access this route");
     }
 
-    //  pagination implement
-    /** pagination --> ?page=30&limit=10
-     * page --- 1
-     * limit  --> 10
-     * skip = (page-1) * limit ---> 1 st page skip --> 1-1  * 10 --> skip --> 0,
-     * skip = (page-1) * limit ---> 2 st page skip --> 2-1  * 10 --> skip --> 10,
-     * skip = (page-1) * limit ---> 3 st page skip --> 3-1  * 10 --> skip --> 20,
-     */
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-    const page = Number(query.page) || 1
-    const limit = Number(query.limit) || 10
-    const skip = (page - 1) * limit
+    const [parcels, totalCount] = await Promise.all([
+        prisma.parcel.findMany({
+            where: { senderId: decodeToken.userId },
+            include: {
+                sender: { select: { name: true, email: true, address: true } },
+                receiver: { select: { name: true, email: true, address: true } }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: limit,
+            skip: skip
+        }),
+        prisma.parcel.count({ where: { senderId: decodeToken.userId } })
+    ]);
 
-
-
-    const totalCountParcel = await Parcel.countDocuments({ sender: decodeToken.userId })
-    const totalPage = Math.ceil(totalCountParcel / limit)
-    // sender parcel find 
-    const senderParcel = await Parcel.find(
-        { sender: decodeToken.userId }
-    )
-        .populate('sender', 'name email address')
-        .populate('receiver', 'name email address')
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .skip(skip)
-
-    const meta: TMeta = {
-        page: page,
-        limit: limit,
-        total: totalCountParcel,
-        totalPage: totalPage
-    }
+    const totalPage = Math.ceil(totalCount / limit);
 
     return {
-        data: senderParcel,
-        meta: meta
-    }
+        data: parcels,
+        meta: {
+            page,
+            limit,
+            total: totalCount,
+            totalPage
+        }
+    };
 }
 
-//  admin parcel services
 const getAllParcelByAdmin = async (query: Record<string, string>, decodeToken: JwtPayload) => {
-
-    // all?filter=REQUESTED
-    const filter = query.filter ? { currentStatus: query.filter } : {};
-
     if (decodeToken.role !== Role.ADMIN) {
-        throw new Error("You can not access this route")
+        throw new AppError(StatusCodes.FORBIDDEN, "You cannot access this route");
     }
 
-    //  pagination
-    const page = Number(query.page) || 1
-    const limit = Number(query.limit) || 10
-    const skip = (page - 1) * limit
+    const filter = query.filter ? { currentStatus: query.filter as ParcelStatus } : {};
 
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
 
+    const [parcels, totalCount] = await Promise.all([
+        prisma.parcel.findMany({
+            where: filter,
+            include: {
+                sender: { select: { name: true, email: true, address: true } },
+                receiver: { select: { name: true, email: true, address: true } }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: limit,
+            skip: skip
+        }),
+        prisma.parcel.count({ where: filter })
+    ]);
 
-    const totalCountParcel = await Parcel.countDocuments(filter)
-    const totalPage = Math.ceil(totalCountParcel / limit)
-
-    // sender parcel find 
-    const senderParcel = await Parcel.find(filter)
-        .populate('sender', 'name email address')
-        .populate('receiver', 'name email address')
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .skip(skip)
-
-    const meta: TMeta = {
-        page: page,
-        limit: limit,
-        total: totalCountParcel,
-        totalPage: totalPage
-    }
+    const totalPage = Math.ceil(totalCount / limit);
 
     return {
-        data: senderParcel,
-        meta: meta
-    }
+        data: parcels,
+        meta: {
+            page,
+            limit,
+            total: totalCount,
+            totalPage
+        }
+    };
 }
 
 const updateIsBlocked = async (id: string, decodeToken: JwtPayload) => {
+    const admin = await prisma.user.findUnique({
+        where: { email: decodeToken.email }
+    });
 
-    const isExistUser = await User.findOne({ email: decodeToken.email });
-
-    if (!isExistUser) {
-        throw new Error("user not found !")
-    }
-
-    if (isExistUser.role !== Role.ADMIN) {
-        throw new Error("You can not access this route")
+    if (!admin || admin.role !== Role.ADMIN) {
+        throw new AppError(StatusCodes.FORBIDDEN, "You cannot access this route");
     };
 
-    const parcel = await Parcel.findById(id);
-    let updateData: any;
+    const parcel = await prisma.parcel.findUnique({
+        where: { id }
+    });
 
-    if (parcel?.isBlocked) {
-        updateData = await Parcel.findByIdAndUpdate(
-            id,
-            { isBlocked: false },
-            { new: true, runValidators: true }
-        )
-    } else {
-        updateData = await Parcel.findByIdAndUpdate(
-            id,
-            { isBlocked: true },
-            { new: true, runValidators: true }
-        )
+    if (!parcel) {
+        throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found!");
     }
 
+    const updatedParcel = await prisma.parcel.update({
+        where: { id },
+        data: { isBlocked: !parcel.isBlocked }
+    });
 
-
-    return {
-        updateData
-    }
+    return updatedParcel;
 }
 
 const updateCurrentStatus = async (id: string, decodeToken: JwtPayload, note: string) => {
     if (decodeToken.role !== Role.ADMIN) {
-        throw new Error("you are not authorized to access this route");
+        throw new AppError(StatusCodes.FORBIDDEN, "You are not authorized to access this route");
     }
 
-    const parcel = await Parcel.findById(id);
+    const parcel = await prisma.parcel.findUnique({
+        where: { id }
+    });
 
-    if (!parcel) throw new Error("parcel not found");
-
-    let newStatus: ParcelStatus | null = null;
-    let newLog: IStatusLog | null = null;
+    if (!parcel) throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found");
 
     if (parcel.currentStatus === ParcelStatus.CANCELLED) {
-        throw new Error("this parcel already cancel! so you cannot update current status")
+        throw new AppError(StatusCodes.BAD_REQUEST, "This parcel is already cancelled!");
     }
 
-    else if (parcel.currentStatus === ParcelStatus.REQUESTED) {
+    let newStatus: ParcelStatus;
+    let newLog;
+
+    if (parcel.currentStatus === ParcelStatus.REQUESTED) {
         newStatus = ParcelStatus.APPROVED;
         newLog = updateStatusLogsApproved(Role.ADMIN, note);
-
     } else if (parcel.currentStatus === ParcelStatus.APPROVED) {
         newStatus = ParcelStatus.DISPATCHED;
         newLog = updateStatusLogsDispatched(Role.ADMIN, note);
-
-    } else if (parcel.currentStatus === ParcelStatus.DISPATCHED) {
-        throw new Error("Parcel already DISPATCHED");
+    } else {
+        throw new AppError(StatusCodes.BAD_REQUEST, `Cannot update status from ${parcel.currentStatus}`);
     }
 
-    const updateData = await Parcel.findByIdAndUpdate(
-        id,
-        {
-            $set: { currentStatus: newStatus },
-            $push: { statusLogs: newLog }
-        },
-        { new: true, runValidators: true }
-    );
+    const updatedParcel = await prisma.parcel.update({
+        where: { id },
+        data: {
+            currentStatus: newStatus,
+            statusLogs: {
+                push: newLog
+            }
+        }
+    });
 
-    return { updateData };
+    return updatedParcel;
 };
 
-
-// Receiver parcel services
 const incomingParcel = async (decodedToken: JwtPayload) => {
+    const incoming = await prisma.parcel.findMany({
+        where: { receiverId: decodedToken.userId },
+        include: {
+            sender: { select: { name: true, email: true, address: true, phone: true } },
+            receiver: { select: { name: true, email: true, address: true, phone: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+    });
 
-    const incoming = await Parcel.find({ receiver: decodedToken.userId })
-        .populate("sender", "name email address phone")
-        .populate("receiver", "name email address phone")
-
-    const totalCount = await Parcel.countDocuments({ receiver: decodedToken.userId });
-
-    const meta: TMeta = {
-        total: totalCount,
-        limit: 0,
-        page: 0,
-        totalPage: 0
-    }
+    const totalCount = await prisma.parcel.count({
+        where: { receiverId: decodedToken.userId }
+    });
 
     return {
         incoming,
-        meta
-    }
+        meta: {
+            total: totalCount,
+            limit: 0,
+            page: 0,
+            totalPage: 0
+        }
+    };
 }
 
 const confirmCurrentStatus = async (id: string, decodedToken: JwtPayload) => {
-
     if (decodedToken.role !== Role.RECEIVER) {
-        throw new Error("you are not authorized this route")
+        throw new AppError(StatusCodes.FORBIDDEN, "You are not authorized for this route");
     }
 
-    const parcel = await Parcel.findOne({ receiver: decodedToken.userId, _id: id });
+    const parcel = await prisma.parcel.findFirst({
+        where: { id, receiverId: decodedToken.userId }
+    });
 
     if (!parcel) {
-        throw new Error("parcel not fount")
+        throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found");
     }
 
     if (parcel.currentStatus !== ParcelStatus.DISPATCHED) {
-        throw new Error(`Invalid status: Parcel is currently ${parcel.currentStatus}, expected DISPATCHED.`);
+        throw new AppError(StatusCodes.BAD_REQUEST, `Invalid status: Parcel is currently ${parcel.currentStatus}, expected DISPATCHED.`);
     };
 
+    const updatedParcel = await prisma.parcel.update({
+        where: { id },
+        data: {
+            currentStatus: ParcelStatus.DELIVERED,
+            statusLogs: {
+                push: updateStatusLogsDelivered
+            },
+            deliveredAt: new Date()
+        }
+    });
 
-
-    const confirmStatus = await Parcel.findByIdAndUpdate(
-        parcel._id,
-        {
-            $set: { currentStatus: ParcelStatus.DELIVERED },
-            $push: { statusLogs: updateStatusLogsDelivered }
-        },
-        { new: true, runValidators: true }
-    )
-
-    return {
-        confirmStatus
-    }
+    return updatedParcel;
 }
 
 const deliveryHistory = async (decodedToken: JwtPayload) => {
+    const parcels = await prisma.parcel.findMany({
+        where: {
+            receiverId: decodedToken.userId,
+            currentStatus: ParcelStatus.DELIVERED
+        },
+        include: {
+            sender: { select: { name: true, email: true, address: true } },
+            receiver: { select: { name: true, email: true, address: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+    });
 
-    if (!decodedToken) throw new Error("decode token is not found")
-
-    const parcel = await Parcel.find({
-        receiver: decodedToken.userId,
-        currentStatus: ParcelStatus.DELIVERED
-    })
-        .populate('sender', 'name email address')
-        .populate('receiver', 'name email address')
-        .sort({ createdAt: -1 })
-
-    return {
-        parcel
-    }
-
+    return parcels;
 }
 
 const achievement = async () => {
-
-    const parcelCount = await Parcel.countDocuments();
-    const clientCount = await User.countDocuments();
+    const [parcelCount, clientCount] = await Promise.all([
+        prisma.parcel.count(),
+        prisma.user.count()
+    ]);
 
     return {
         parcelCount,
         clientCount
-    }
-
+    };
 }
-
-
 
 export const ParcelService = {
     createParcel,
@@ -319,5 +285,4 @@ export const ParcelService = {
     confirmCurrentStatus,
     deliveryHistory,
     achievement
-
 }

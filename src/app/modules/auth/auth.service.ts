@@ -1,49 +1,43 @@
 import { createUserToken } from "../../utils/useToken";
-import { IUser } from "../user/user.interface"
-import { User } from "../user/user.model";
+import prisma from "../../utils/prisma";
 import bcrypt from 'bcrypt';
+import AppError from "../../utils/AppError";
+import { StatusCodes } from "http-status-codes";
 
-
-
-const credentialLogin = async (payload: Partial<IUser>) => {
+const credentialLogin = async (payload: any) => {
     const { email, password } = payload;
 
-    // find user --> email
-    const isExistsUser = await User.findOne({ email });
-
-    if (!isExistsUser) {
-        throw new Error("user not found ❌")
+    if (!password) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Password is required ❌");
     }
 
-    //  matching password
-    const isPasswordMatch = await bcrypt.compare(password as string, isExistsUser.password as string)
+    const user = await prisma.user.findUnique({
+        where: { email }
+    });
+
+    if (!user) {
+        throw new AppError(StatusCodes.NOT_FOUND, "User not found ❌");
+    }
+
+    if (!user.password) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid login method. Please use Google Login ❌");
+    }
+
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
 
     if (!isPasswordMatch) {
-        throw new Error("Invalid password ❌")
+        throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid password ❌");
     }
-    //  create jwt token
-    const generateToken = createUserToken(isExistsUser)
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: pass, ...rest } = isExistsUser.toObject()
+    const accessToken = createUserToken(user as any);
+
+    const { password: _, ...userWithoutPassword } = user;
+
     return {
-        accessToken: generateToken,
-        user: rest
-    }
-
+        accessToken,
+        user: userWithoutPassword
+    };
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 export const AuthService = {
     credentialLogin

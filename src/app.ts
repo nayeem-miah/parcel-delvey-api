@@ -56,10 +56,3 @@ app.use(globalErrorHandler);
 app.use(notFount);
 
 export default app;
-
-/**
- * project modular mvc pattern 
- * todo 1 : create user (role base by default ---> sender or receiver)
- * todo 2 : manually admin create
- * todo 3 : create parcel--> admin role and sender role
- */

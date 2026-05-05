@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken"
 export const createUserToken = (user: Partial<IUser>) => {
 
     const jwtPayload = {
-        userId: user._id,
+        userId: (user as any).id || (user as any)._id,
         email: user.email,
         role: user.role
     }

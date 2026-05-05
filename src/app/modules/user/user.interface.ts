@@ -1,6 +1,3 @@
-import { Types } from "mongoose";
-
-
 export enum Role {
     ADMIN = "ADMIN",
     SENDER = "SENDER",
@@ -13,7 +10,7 @@ export enum IsActive {
 }
 
 export interface IUser {
-    _id: Types.ObjectId;
+    id: string;
     name: string;
     email: string;
     password?: string;
