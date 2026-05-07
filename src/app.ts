@@ -13,6 +13,8 @@ import "./app/config/passport"
 
 
 const app = express();
+app.set("trust proxy", 1);
+
 
 // passport
 app.use(expressSession({
@@ -33,7 +35,9 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cors({
     origin: [
         "http://localhost:3000",
-        "https://parcel-delevary-client.vercel.app"
+        "https://parcel-delevary-client.vercel.app",
+        "https://parcel-delvey-api.vercel.app",
+        envVars.FRONTEND_URL
     ],
     credentials: true
 }

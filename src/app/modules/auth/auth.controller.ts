@@ -21,13 +21,17 @@ const credentialLogin = catchAsync(async (req: Request, res: Response) => {
 });
 const logout = catchAsync(async (req: Request, res: Response) => {
 
+    const isProduction = envVars.NODE_ENV === "production" || process.env.VERCEL === "1";
+
     // clear cookie jwt token
     res.clearCookie("accessToken", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ?
-            "none" : "lax",
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
+        path: "/",
     })
+
+
 
 
     sendResponse(res, {
